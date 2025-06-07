@@ -52,6 +52,7 @@
       text-align: center;
       padding: 2rem;
       width: 100%;
+      z-index: 1;
     }
     .content.fade-out {
       opacity: 0;
@@ -81,6 +82,58 @@
       transition: width 5s linear;
       width: 0;
     }
+    .mango-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      opacity: 0.75;
+      overflow: hidden;
+      transition: opacity 0.5s;
+    }
+    .mango-row {
+      width: fit-content;
+      min-width: 100vw;
+      white-space: nowrap;
+      font-size: min(7vw, 64px);
+      line-height: 1.1;
+      will-change: transform, opacity;
+      position: absolute;
+      left: 0;
+      pointer-events: none;
+      opacity: 0;
+      animation-fill-mode: forwards;
+    }
+    .mango-row.top {
+      margin-top: -0.3em;
+    }
+    .mango-row.bottom {
+      margin-bottom: -0.3em;
+    }
+    @keyframes mango-left {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100vw); }
+    }
+    @keyframes mango-right {
+      0% { transform: translateX(100vw); }
+      100% { transform: translateX(-100%); }
+    }
+    .mango-row.left {
+      animation: mango-left 25s linear infinite, mango-fadein 1.5s ease-in forwards;
+    }
+    .mango-row.right {
+      animation: mango-right 25s linear infinite, mango-fadein 1.5s ease-in forwards;
+    }
+    .mango-overlay.fade-out {
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    @keyframes mango-fadein {
+      0% { opacity: 0; }
+      100% { opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -91,6 +144,7 @@
       <div class="progress"></div>
     </div>
   </div>
+  <div class="mango-overlay" style="display:none"></div>
   <script>
   document.addEventListener('DOMContentLoaded', () => {
     const punchlines = [
@@ -101,16 +155,55 @@
     
     document.querySelector('.tagline').textContent = punchlines[Math.floor(Math.random() * punchlines.length)];
     
-    requestAnimationFrame(() => {
-      document.querySelector('.progress').style.width = '100%';
-    });
-
-    setTimeout(() => {
-      document.querySelector('.content').classList.add('fade-out');
+    function startNormalFlow() {
+      requestAnimationFrame(() => {
+        document.querySelector('.progress').style.width = '100%';
+      });
       setTimeout(() => {
-        window.location.href = 'https://www.twitch.tv/mando739';
-      }, 500);
-    }, 5000);
+        document.querySelector('.content').classList.add('fade-out');
+        setTimeout(() => {
+          window.location.href = 'https://www.twitch.tv/mando739';
+        }, 500);
+      }, 5000);
+    }
+
+    function startMangoEasterEgg() {
+      const overlay = document.querySelector('.mango-overlay');
+      overlay.style.display = 'flex';
+      overlay.innerHTML = '';
+      const rowHeight = 1.1; // em, matches line-height
+      const fontSize = Math.min(window.innerWidth * 0.07, 64); // px
+      const fullRows = Math.ceil(window.innerHeight / (fontSize * rowHeight)) + 1;
+      const rows = Math.max(1, Math.floor(fullRows * 0.75));
+      const mangoesPerRow = Math.ceil(window.innerWidth / fontSize) + 4;
+      for (let i = 0; i < rows; i++) {
+        const row = document.createElement('div');
+        row.className = 'mango-row ' + (i % 2 === 0 ? 'left' : 'right');
+        let mangoes = '';
+        for (let j = 0; j < mangoesPerRow; j++) {
+          mangoes += '🥭';
+        }
+        row.textContent = mangoes;
+        // Calculate top position for each row
+        const top = (-0.5 * rowHeight * fontSize) + (i * ((window.innerHeight + rowHeight * fontSize) / (rows - 1)));
+        row.style.top = `${top}px`;
+        overlay.appendChild(row);
+      }
+      // Animate, then fade out and redirect
+      setTimeout(() => {
+        overlay.classList.add('fade-out');
+        document.querySelector('.content').classList.add('fade-out');
+        setTimeout(() => {
+          window.location.href = 'https://www.twitch.tv/mando739';
+        }, 500);
+      }, 4500);
+    }
+
+    if (Math.random() < 0.10) {
+      startMangoEasterEgg();
+    } else {
+      startNormalFlow();
+    }
   });
   </script>
 </body>
